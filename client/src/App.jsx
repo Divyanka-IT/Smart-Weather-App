@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { HashRouter as Router } from "react-router-dom";
-
 import cities from "./data/cities.json";
 import "./App.css";
 
@@ -25,7 +24,6 @@ function App() {
         setWeather(data);
         localStorage.setItem("lastCity", cityName);
 
-        // Save to recent searches (no duplicates)
         const updatedRecent = Array.from(new Set([cityName, ...recentCities])).slice(0, 8);
         setRecentCities(updatedRecent);
         localStorage.setItem("recentCities", JSON.stringify(updatedRecent));
@@ -38,7 +36,6 @@ function App() {
     }
   };
 
-  // ✅ Fetch weather for multiple default cities
   const fetchWeatherForCities = async (cityArray) => {
     const results = [];
     for (const city of cityArray) {
@@ -55,7 +52,6 @@ function App() {
     setCityWeatherList(results);
   };
 
-  // ✅ Load last searched + default cities on mount
   useEffect(() => {
     const savedCity = localStorage.getItem("lastCity") || "Delhi";
     getWeather(savedCity);
@@ -64,9 +60,8 @@ function App() {
       new Set([...recentCities, ...cities.slice(0, 5)])
     );
     fetchWeatherForCities(uniqueCities);
-  }, []); // run only once
+  }, []);
 
-  // ✅ Navbar scroll effect (separate useEffect)
   useEffect(() => {
     const handleScroll = () => {
       const navbar = document.querySelector(".navbar");
@@ -77,12 +72,10 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ✅ Toggle theme
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
-  // ✅ Share weather data
   const handleShare = async () => {
     if (navigator.share && weather) {
       await navigator.share({
@@ -95,7 +88,6 @@ function App() {
     }
   };
 
-  // ✅ Personalized suggestions
   const getSuggestions = () => {
     if (!weather) return { eat: "", hygiene: "" };
     const temp = weather.main.temp;
@@ -122,122 +114,119 @@ function App() {
   };
 
   return (
-    <div className={`app-container ${theme === "dark" ? "dark" : "light"}`}>
-      {/* 🌤 Navbar */}
-      <nav className="navbar">
-        <h1 className="nav-logo">🌦 Smart Weather</h1>
-        <ul className="nav-links">
-          <li><a href="#home">Home</a></li>
-          <li><a href="#about">About</a></li>
-          <li><a href="#guide">Usage Guide</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-        <div className="nav-actions">
-          <button className="theme-toggle" onClick={toggleTheme}>
-            {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
-          </button>
-          {weather && (
-            <button className="share-btn" onClick={handleShare}>
-              📤 Share
+    <Router>
+      <div className={`app-container ${theme === "dark" ? "dark" : "light"}`}>
+        {/* 🌤 Navbar */}
+        <nav className="navbar">
+          <h1 className="nav-logo">🌦 Smart Weather</h1>
+          <ul className="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#guide">Usage Guide</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+          <div className="nav-actions">
+            <button className="theme-toggle" onClick={toggleTheme}>
+              {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
             </button>
-          )}
-        </div>
-      </nav>
-
-      {/* 🌍 Main Weather Section */}
-      <section id="home" className="main-section">
-        <div className="main-content">
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Enter city..."
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && getWeather(city)}
-            />
-            {city && (
-              <button className="cancel-btn" onClick={() => setCity("")}>
-                ✖
+            {weather && (
+              <button className="share-btn" onClick={handleShare}>
+                📤 Share
               </button>
             )}
-            <button onClick={() => getWeather(city)}>Search</button>
           </div>
+        </nav>
 
-          {weather && (
-            <div className={`weather-card main-card ${weather.weather[0].main.toLowerCase()}`}>
-              <h2>{weather.name}</h2>
-              <p className="temp">{Math.round(weather.main.temp)}°C</p>
-              <p className="desc">{weather.weather[0].description}</p>
-              <p>Humidity: {weather.main.humidity}%</p>
-              <p>Wind: {weather.wind.speed} m/s</p>
+        {/* 🌍 Main Weather Section */}
+        <section id="home" className="main-section">
+          <div className="main-content">
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Enter city..."
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && getWeather(city)}
+              />
+              {city && (
+                <button className="cancel-btn" onClick={() => setCity("")}>
+                  ✖
+                </button>
+              )}
+              <button onClick={() => getWeather(city)}>Search</button>
             </div>
-          )}
 
-          {weather && (
-            <div className="suggestions">
-              <h3>🌿 Weather Tips</h3>
-              <p><strong>Eat:</strong> {getSuggestions().eat}</p>
-              <p><strong>Hygiene:</strong> {getSuggestions().hygiene}</p>
+            {weather && (
+              <div className={`weather-card main-card ${weather.weather[0].main.toLowerCase()}`}>
+                <h2>{weather.name}</h2>
+                <p className="temp">{Math.round(weather.main.temp)}°C</p>
+                <p className="desc">{weather.weather[0].description}</p>
+                <p>Humidity: {weather.main.humidity}%</p>
+                <p>Wind: {weather.wind.speed} m/s</p>
+              </div>
+            )}
+
+            {weather && (
+              <div className="suggestions">
+                <h3>🌿 Weather Tips</h3>
+                <p><strong>Eat:</strong> {getSuggestions().eat}</p>
+                <p><strong>Hygiene:</strong> {getSuggestions().hygiene}</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {recentCities.length > 0 && (
+          <section id="recent" className="recent-section">
+            <h2>🕓 Recently Searched</h2>
+            <div className="city-grid">
+              {recentCities.map((city, i) => (
+                <div key={i} className="weather-card" onClick={() => getWeather(city)}>
+                  <h3>{city}</h3>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
-      </section>
+          </section>
+        )}
 
-      {/* 🕓 Recent Searches */}
-      {recentCities.length > 0 && (
-        <section id="recent" className="recent-section">
-          <h2>🕓 Recently Searched</h2>
+        <section id="compare" className="compare-section">
+          <h2>🌍 Nearby Cities</h2>
           <div className="city-grid">
-            {recentCities.map((city, i) => (
-              <div key={i} className="weather-card" onClick={() => getWeather(city)}>
-                <h3>{city}</h3>
+            {cityWeatherList.map((c, i) => (
+              <div key={i} className={`weather-card ${c.data.weather[0].main.toLowerCase()}`}>
+                <h3>{c.name}</h3>
+                <p className="temp-small">{Math.round(c.data.main.temp)}°C</p>
+                <p>{c.data.weather[0].main}</p>
               </div>
             ))}
           </div>
         </section>
-      )}
 
-      {/* 🌍 Nearby Cities */}
-      <section id="compare" className="compare-section">
-        <h2>🌍 Nearby Cities</h2>
-        <div className="city-grid">
-          {cityWeatherList.map((c, i) => (
-            <div key={i} className={`weather-card ${c.data.weather[0].main.toLowerCase()}`}>
-              <h3>{c.name}</h3>
-              <p className="temp-small">{Math.round(c.data.main.temp)}°C</p>
-              <p>{c.data.weather[0].main}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <section id="about" className="info-section">
+          <h2>ℹ️ About Smart Weather</h2>
+          <p>
+            Smart Weather gives real-time weather updates for your favorite cities and nearby regions.
+            Get personalized tips for food, hygiene, and health based on the current weather.
+          </p>
+        </section>
 
-      {/* ℹ️ About Section */}
-      <section id="about" className="info-section">
-        <h2>ℹ️ About Smart Weather</h2>
-        <p>
-          Smart Weather gives real-time weather updates for your favorite cities and nearby regions.
-          Get personalized tips for food, hygiene, and health based on the current weather.
-        </p>
-      </section>
+        <section id="guide" className="info-section">
+          <h2>🧭 Usage Guide</h2>
+          <ul>
+            <li>Enter a city name and click <b>Search</b> or press <b>Enter</b>.</li>
+            <li>Switch between <b>Dark</b> and <b>Light</b> modes using the toggle.</li>
+            <li>Check <b>Nearby Cities</b> for quick comparisons.</li>
+            <li>Tap <b>Share</b> to send weather info to friends.</li>
+          </ul>
+        </section>
 
-      {/* 🧭 Usage Guide */}
-      <section id="guide" className="info-section">
-        <h2>🧭 Usage Guide</h2>
-        <ul>
-          <li>Enter a city name and click <b>Search</b> or press <b>Enter</b>.</li>
-          <li>Switch between <b>Dark</b> and <b>Light</b> modes using the toggle.</li>
-          <li>Check <b>Nearby Cities</b> for quick comparisons.</li>
-          <li>Tap <b>Share</b> to send weather info to friends.</li>
-        </ul>
-      </section>
-
-      {/* 📞 Contact Section */}
-      <section id="contact" className="info-section">
-        <h2>📞 Contact Us</h2>
-        <p>Developed with ❤️ by your friendly weather enthusiast!</p>
-        <p>Email: <a href="mailto:smartweather@app.com">smartweather@app.com</a></p>
-      </section>
-    </div>
+        <section id="contact" className="info-section">
+          <h2>📞 Contact Us</h2>
+          <p>Developed with ❤️ by your friendly weather enthusiast!</p>
+          <p>Email: <a href="mailto:smartweather@app.com">smartweather@app.com</a></p>
+        </section>
+      </div>
+    </Router>
   );
 }
 
