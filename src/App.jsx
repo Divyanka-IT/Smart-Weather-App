@@ -1,8 +1,123 @@
 import { useEffect, useState } from "react";
-import { HashRouter as Router } from "react-router-dom";
+import {
+  HashRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+} from "react-router-dom";
 import cities from "./data/cities.json";
 import "./App.css";
 
+// 🌍 Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
+// 🏠 Home Page
+function Home({ city, setCity, weather, getWeather, getSuggestions }) {
+  return (
+    <section className="main-section">
+      <div className="main-content">
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Enter city..."
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && getWeather(city)}
+          />
+          {city && (
+            <button className="cancel-btn" onClick={() => setCity("")}>
+              ✖
+            </button>
+          )}
+          <button onClick={() => getWeather(city)}>Search</button>
+        </div>
+
+        {weather && (
+          <div
+            className={`weather-card main-card ${weather.weather[0].main.toLowerCase()}`}
+          >
+            <h2>{weather.name}</h2>
+            <p className="temp">{Math.round(weather.main.temp)}°C</p>
+            <p className="desc">{weather.weather[0].description}</p>
+            <p>Humidity: {weather.main.humidity}%</p>
+            <p>Wind: {weather.wind.speed} m/s</p>
+          </div>
+        )}
+
+        {weather && (
+          <div className="suggestions">
+            <h3>🌿 Weather Tips</h3>
+            <p>
+              <strong>Eat:</strong> {getSuggestions().eat}
+            </p>
+            <p>
+              <strong>Hygiene:</strong> {getSuggestions().hygiene}
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ℹ️ About Page
+function About() {
+  return (
+    <section className="info-section">
+      <h2>ℹ️ About Smart Weather</h2>
+      <p>
+        Smart Weather gives real-time weather updates for your favorite cities
+        and nearby regions. Get personalized tips for food, hygiene, and health
+        based on the current weather.
+      </p>
+    </section>
+  );
+}
+
+// 🧭 Guide Page
+function Guide() {
+  return (
+    <section className="info-section">
+      <h2>🧭 Usage Guide</h2>
+      <ul>
+        <li>
+          Enter a city name and click <b>Search</b> or press <b>Enter</b>.
+        </li>
+        <li>
+          Switch between <b>Dark</b> and <b>Light</b> modes using the toggle.
+        </li>
+        <li>
+          Check <b>Nearby Cities</b> for quick comparisons.
+        </li>
+        <li>
+          Tap <b>Share</b> to send weather info to friends.
+        </li>
+      </ul>
+    </section>
+  );
+}
+
+// 📞 Contact Page
+function Contact() {
+  return (
+    <section className="info-section">
+      <h2>📞 Contact Us</h2>
+      <p>Developed with ❤️ by your friendly weather enthusiast!</p>
+      <p>
+        Email: <a href="mailto:smartweather@app.com">smartweather@app.com</a>
+      </p>
+    </section>
+  );
+}
+
+// 🌦 Main App Component
 function App() {
   const [city, setCity] = useState(localStorage.getItem("lastCity") || "");
   const [weather, setWeather] = useState(null);
@@ -24,7 +139,9 @@ function App() {
         setWeather(data);
         localStorage.setItem("lastCity", cityName);
 
-        const updatedRecent = Array.from(new Set([cityName, ...recentCities])).slice(0, 8);
+        const updatedRecent = Array.from(
+          new Set([cityName, ...recentCities])
+        ).slice(0, 8);
         setRecentCities(updatedRecent);
         localStorage.setItem("recentCities", JSON.stringify(updatedRecent));
       } else {
@@ -36,6 +153,7 @@ function App() {
     }
   };
 
+  // ✅ Fetch multiple cities
   const fetchWeatherForCities = async (cityArray) => {
     const results = [];
     for (const city of cityArray) {
@@ -55,13 +173,13 @@ function App() {
   useEffect(() => {
     const savedCity = localStorage.getItem("lastCity") || "Delhi";
     getWeather(savedCity);
-
     const uniqueCities = Array.from(
       new Set([...recentCities, ...cities.slice(0, 5)])
     );
     fetchWeatherForCities(uniqueCities);
   }, []);
 
+  // ✅ Navbar scroll effect
   useEffect(() => {
     const handleScroll = () => {
       const navbar = document.querySelector(".navbar");
@@ -93,7 +211,8 @@ function App() {
     const temp = weather.main.temp;
     const condition = weather.weather[0].main.toLowerCase();
 
-    let eat = "", hygiene = "";
+    let eat = "",
+      hygiene = "";
 
     if (temp > 30) {
       eat = "Stay hydrated 🍉 — drink coconut water or lemon juice.";
@@ -115,15 +234,24 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className={`app-container ${theme === "dark" ? "dark" : "light"}`}>
         {/* 🌤 Navbar */}
         <nav className="navbar">
           <h1 className="nav-logo">🌦 Smart Weather</h1>
           <ul className="nav-links">
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#guide">Usage Guide</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/about">About</Link>
+            </li>
+            <li>
+              <Link to="/guide">Usage Guide</Link>
+            </li>
+            <li>
+              <Link to="/contact">Contact</Link>
+            </li>
           </ul>
           <div className="nav-actions">
             <button className="theme-toggle" onClick={toggleTheme}>
@@ -137,51 +265,36 @@ function App() {
           </div>
         </nav>
 
-        {/* 🌍 Main Weather Section */}
-        <section id="home" className="main-section">
-          <div className="main-content">
-            <div className="search-bar">
-              <input
-                type="text"
-                placeholder="Enter city..."
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && getWeather(city)}
+        {/* ✅ HashRouter Routes */}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Home
+                city={city}
+                setCity={setCity}
+                weather={weather}
+                getWeather={getWeather}
+                getSuggestions={getSuggestions}
               />
-              {city && (
-                <button className="cancel-btn" onClick={() => setCity("")}>
-                  ✖
-                </button>
-              )}
-              <button onClick={() => getWeather(city)}>Search</button>
-            </div>
+            }
+          />
+          <Route path="/about" element={<About />} />
+          <Route path="/guide" element={<Guide />} />
+          <Route path="/contact" element={<Contact />} />
+        </Routes>
 
-            {weather && (
-              <div className={`weather-card main-card ${weather.weather[0].main.toLowerCase()}`}>
-                <h2>{weather.name}</h2>
-                <p className="temp">{Math.round(weather.main.temp)}°C</p>
-                <p className="desc">{weather.weather[0].description}</p>
-                <p>Humidity: {weather.main.humidity}%</p>
-                <p>Wind: {weather.wind.speed} m/s</p>
-              </div>
-            )}
-
-            {weather && (
-              <div className="suggestions">
-                <h3>🌿 Weather Tips</h3>
-                <p><strong>Eat:</strong> {getSuggestions().eat}</p>
-                <p><strong>Hygiene:</strong> {getSuggestions().hygiene}</p>
-              </div>
-            )}
-          </div>
-        </section>
-
+        {/* Common Sections */}
         {recentCities.length > 0 && (
-          <section id="recent" className="recent-section">
+          <section className="recent-section">
             <h2>🕓 Recently Searched</h2>
             <div className="city-grid">
               {recentCities.map((city, i) => (
-                <div key={i} className="weather-card" onClick={() => getWeather(city)}>
+                <div
+                  key={i}
+                  className="weather-card"
+                  onClick={() => getWeather(city)}
+                >
                   <h3>{city}</h3>
                 </div>
               ))}
@@ -189,41 +302,22 @@ function App() {
           </section>
         )}
 
-        <section id="compare" className="compare-section">
+        <section className="compare-section">
           <h2>🌍 Nearby Cities</h2>
           <div className="city-grid">
             {cityWeatherList.map((c, i) => (
-              <div key={i} className={`weather-card ${c.data.weather[0].main.toLowerCase()}`}>
+              <div
+                key={i}
+                className={`weather-card ${c.data.weather[0].main.toLowerCase()}`}
+              >
                 <h3>{c.name}</h3>
-                <p className="temp-small">{Math.round(c.data.main.temp)}°C</p>
+                <p className="temp-small">
+                  {Math.round(c.data.main.temp)}°C
+                </p>
                 <p>{c.data.weather[0].main}</p>
               </div>
             ))}
           </div>
-        </section>
-
-        <section id="about" className="info-section">
-          <h2>ℹ️ About Smart Weather</h2>
-          <p>
-            Smart Weather gives real-time weather updates for your favorite cities and nearby regions.
-            Get personalized tips for food, hygiene, and health based on the current weather.
-          </p>
-        </section>
-
-        <section id="guide" className="info-section">
-          <h2>🧭 Usage Guide</h2>
-          <ul>
-            <li>Enter a city name and click <b>Search</b> or press <b>Enter</b>.</li>
-            <li>Switch between <b>Dark</b> and <b>Light</b> modes using the toggle.</li>
-            <li>Check <b>Nearby Cities</b> for quick comparisons.</li>
-            <li>Tap <b>Share</b> to send weather info to friends.</li>
-          </ul>
-        </section>
-
-        <section id="contact" className="info-section">
-          <h2>📞 Contact Us</h2>
-          <p>Developed with ❤️ by your friendly weather enthusiast!</p>
-          <p>Email: <a href="mailto:smartweather@app.com">smartweather@app.com</a></p>
         </section>
       </div>
     </Router>
